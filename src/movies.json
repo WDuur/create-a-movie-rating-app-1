@@ -35,6 +35,18 @@
 				"Drama"
 			],
 			"inTheaters": false
+		},
+		{
+			"id": 4,
+			"name": "Indiana Jones",
+			"description": "Indiana Jones and the Temple of Doom brings you non-stop thrills and excitement like nothing you’ve ever experienced.",
+			"image": "https://m.media-amazon.com/images/I/51MAG8k8WAL.jpg",
+			"rating": 5,
+			"genres": [
+				"Action",
+				"Adventure"
+			],
+			"inTheaters": false
 		}
 	]
 }
