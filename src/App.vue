@@ -7,48 +7,82 @@ const movies = reactive(items);
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl py-16">
-    <h2 class="text-2xl font-bold text-white">Movies</h2>
+  <div class="m-overview">
+    <h2 class="m-overview__title">Movies</h2>
 
-    <div
-      class="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8"
-    >
-      <div
-        v-for="movie in movies"
-        :key="movie.id"
-        class="group relative bg-white overflow-hidden rounded-md shadow-md"
-      >
-        <div class="aspect-h-1 aspect-w-1 w-full overflow-hidden">
-          <img :src="movie.image" class="h-full w-full max-h-[400px]" />
+    <div class="m-overview-movies">
+      <div v-for="movie in movies" :key="movie.id" class="m-overview-card">
+        <div class="m-overview-card__image aspect-h-1 aspect-w-1">
+          <img :src="movie.image" />
         </div>
-        <div class="flex flex-col p-4">
-          <h3 class="font-bold text-gray-700">
+        <div class="m-overview-card-content">
+          <h3 class="m-overview-card-content__title">
             {{ movie.name }}
           </h3>
-          <div class="flex flex-row gap-2">
+          <div class="m-overview-card-content__genres">
             <span
               v-for="genre in movie.genres"
               :key="`${movie.id}-${genre}`"
-              class="mt-1 rounded-md text-white bg-blue-900 px-2 py-1 text-xs gap-6"
+              class="m-overview-pillow"
               >{{ genre }}</span
             >
           </div>
-          <p class="mt-1 text-sm text-gray-500 h-[100px]">
+          <p class="m-overview-card-content__description">
             {{ movie.description }}
           </p>
-          <span class="flex flex-row text-sm gap-1">
+          <span class="m-overview-card-content__rating">
             Raiting: {{ movie.rating }}/5
             <StarIcon
               v-for="star in movie.rating"
               :key="`star-${star}`"
-              class="text-yellow-500 h-5 w-5"
+              class="m-overview-card-content__star"
             />
           </span>
         </div>
       </div>
     </div>
   </div>
-  <!-- </div> -->
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.m-overview {
+  @apply mx-auto px-4 py-16 lg:max-w-7xl;
+  &__title {
+    @apply text-2xl font-bold text-white;
+  }
+  &-movies {
+    @apply grid gap-6 sm:grid-cols-2 lg:grid-cols-4;
+  }
+  &-card {
+    @apply relative overflow-hidden rounded-md shadow-md bg-white;
+    &__image {
+      @apply w-full overflow-hidden;
+      img {
+        @apply h-full w-full max-h-80;
+      }
+    }
+    &-content {
+      @apply flex flex-col p-4 text-sm;
+
+      &__title {
+        @apply font-bold text-gray-700;
+      }
+      &__genres {
+        @apply flex flex-row gap-2;
+      }
+      &__description {
+        @apply mt-1 text-gray-500 h-28;
+      }
+      &__rating {
+        @apply flex flex-row;
+      }
+      &__star {
+        @apply text-yellow-500 h-5 w-5;
+      }
+    }
+  }
+  &-pillow {
+    @apply mt-1 rounded-md text-white bg-blue-900 px-2 py-1 text-xs gap-6;
+  }
+}
+</style>
