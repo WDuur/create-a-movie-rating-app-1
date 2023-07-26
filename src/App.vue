@@ -4,6 +4,7 @@ import { items } from "./movies.json";
 import { StarIcon } from "@heroicons/vue/24/solid";
 
 const movies = reactive(items);
+const maxRaiting = 5;
 </script>
 
 <template>
@@ -32,11 +33,22 @@ const movies = reactive(items);
           </p>
           <span class="m-overview-card-content__rating">
             Raiting: {{ movie.rating }}/5
-            <StarIcon
-              v-for="star in movie.rating"
-              :key="`star-${star}`"
-              class="m-overview-card-content__star"
-            />
+
+            <button
+              v-for="star in maxRaiting"
+              :key="current"
+              :disabled="movie.rating === star"
+              @click="movie.rating = star"
+            >
+              <StarIcon
+                class="m-overview-card-content__star"
+                :class="
+                  star <= movie.rating
+                    ? 'm-overview-card-content__star--selected'
+                    : 'm-overview-card-content__star--open'
+                "
+              />
+            </button>
           </span>
         </div>
       </div>
@@ -77,7 +89,14 @@ const movies = reactive(items);
         @apply flex flex-row;
       }
       &__star {
-        @apply text-yellow-500 h-5 w-5;
+        @apply text-gray-100 h-5 w-5;
+
+        &--selected {
+          @apply text-yellow-500;
+        }
+        &--open {
+          @apply text-gray-300;
+        }
       }
     }
   }
