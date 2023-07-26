@@ -1,10 +1,13 @@
 <script setup>
-import { reactive } from "vue";
+import { ref } from "vue";
 import { items } from "./movies.json";
 import { StarIcon } from "@heroicons/vue/24/solid";
 
-const movies = reactive(items);
+const movies = ref(items);
 const maxRaiting = 5;
+const updateRaiting = (movieIndex, rating) => {
+  movies.value[movieIndex].rating = rating;
+};
 </script>
 
 <template>
@@ -12,9 +15,23 @@ const maxRaiting = 5;
     <h2 class="m-overview__title">Movies</h2>
 
     <div class="m-overview-movies">
-      <div v-for="movie in movies" :key="movie.id" class="m-overview-card">
-        <div class="m-overview-card__image aspect-h-1 aspect-w-1">
+      <div
+        v-for="(movie, index) in movies"
+        :key="index"
+        class="m-overview-card"
+      >
+        <div class="m-overview-card__image">
           <img :src="movie.image" />
+          <StarIcon
+            class="m-overview-card__star"
+            :class="[
+              'm-overview-card__star',
+              { 'm-overview-card__star-rating--selected': movie.rating > 0 },
+            ]"
+          />
+          <span class="m-overview-card__star-rating">{{
+            movie.rating ? movie.rating : "-"
+          }}</span>
         </div>
         <div class="m-overview-card-content">
           <h3 class="m-overview-card-content__title">
@@ -38,7 +55,7 @@ const maxRaiting = 5;
               v-for="star in maxRaiting"
               :key="current"
               :disabled="movie.rating === star"
-              @click="movie.rating = star"
+              @click="updateRaiting(index, star)"
             >
               <StarIcon
                 class="m-overview-card-content__star"
@@ -68,9 +85,18 @@ const maxRaiting = 5;
   &-card {
     @apply relative overflow-hidden rounded-md shadow-md bg-white;
     &__image {
-      @apply w-full overflow-hidden;
+      @apply w-full overflow-hidden aspect-square;
       img {
         @apply h-full w-full max-h-80;
+      }
+    }
+    &__star {
+      @apply absolute top-1 right-1.5 text-gray-300 h-14 w-14;
+      &-rating {
+        @apply text-gray-700 font-bold absolute top-5 right-7;
+        &--selected {
+          @apply text-yellow-500;
+        }
       }
     }
     &-content {
