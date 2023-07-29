@@ -1,19 +1,102 @@
 <script setup>
-import { ref } from "vue";
-import { items } from "./movies.json";
-import { StarIcon } from "@heroicons/vue/24/solid";
+import { ref, reactive } from "vue"
+import { items } from "./movies.json"
+import { StarIcon } from "@heroicons/vue/24/solid"
+import Modal from "./Modal.vue"
 
-const movies = ref(items);
-const maxRaiting = 5;
+const movies = ref(items)
+const newMovie = ref({})
+
+const maxRaiting = 5
 const updateRaiting = (movieIndex, rating) => {
-  movies.value[movieIndex].rating = rating;
-};
+  movies.value[movieIndex].rating = rating
+}
+const isModalOpen = ref(false)
+const toggleModal = () => {
+  isModalOpen.value = !isModalOpen.value
+}
+
+const submitForm = () => {
+  console.log(newMovie.value)
+  debugger
+}
 </script>
 
 <template>
   <div class="m-overview">
-    <h2 class="m-overview__title">Movies</h2>
+    <Modal :is-modal-open="isModalOpen" @close-modal="toggleModal">
+      <template #content>
+        <form @submit.prevent="submitForm">
+          <span class="modal-content__block">
+            <label class="modal-content__label" for="name">Name:</label>
+            <input
+              class="modal-content__input"
+              type="text"
+              name="name"
+              v-model="newMovie.name"
+          /></span>
+          <span class="block">
+            <label class="modal-content__label" for="description"
+              >Description:</label
+            >
+            <textarea
+              class="modal-content__input"
+              name="description"
+              rows="4"
+              cols="50"
+              v-model="newMovie.description"
+            ></textarea>
+          </span>
+          <span class="block">
+            <label class="modal-content__label" for="image">Image:</label>
+            <input
+              class="modal-content__input"
+              type="text"
+              name="image"
+              v-model="newMovie.image"
+          /></span>
+          <span class="block">
+            <label class="modal-content__label" for="grene">Grene:</label>
+            <select
+              name="grene"
+              id="grene"
+              class="modal-content__input"
+              multiple
+              v-model="newMovie.grene"
+            >
+              <option value="Crime">Crime</option>
+              <option value="Drama">Drama</option>
+              <option value="Action">Action</option>
+              <option value="Adventure">Adventure</option>
+              <option value="Comedy">Comedy</option>
+            </select>
+          </span>
+          <span class="flex gap-2 py-2">
+            <input
+              type="checkbox"
+              id="theater"
+              name="vehitheaters"
+              v-model="newMovie.inTheaters"
+            />
+            <label class="modal-content__label" for="theaters"
+              >in theaters</label
+            >
+          </span>
+          <span class="flex justify-end">
+            <button class="modal__add-movie" @click="toggleModal">
+              Add Movie
+            </button>
+          </span>
+        </form>
+      </template>
+    </Modal>
 
+    <div class="m-overview__header">
+      <h2 class="m-overview__title">Movies</h2>
+      <button class="m-overview__add-movie" @click="toggleModal">
+        Add Movie
+      </button>
+    </div>
     <div class="m-overview-movies">
       <div
         v-for="(movie, index) in movies"
@@ -53,7 +136,7 @@ const updateRaiting = (movieIndex, rating) => {
 
             <button
               v-for="star in maxRaiting"
-              :key="current"
+              :key="star"
               :disabled="movie.rating === star"
               @click="updateRaiting(index, star)"
             >
@@ -74,10 +157,33 @@ const updateRaiting = (movieIndex, rating) => {
 </template>
 
 <style lang="scss" scoped>
+.modal {
+  &-content {
+    &__block {
+      @apply block;
+    }
+    &__label {
+      @apply block py-2;
+    }
+    &__input {
+      @apply block w-full bg-gray-800 p-2 text-white;
+    }
+  }
+
+  &__add-movie {
+    @apply pointer-events-auto ml-8 rounded-md bg-indigo-600 px-3 py-2 text-[0.8125rem] font-semibold leading-5 text-white hover:bg-indigo-500;
+  }
+}
 .m-overview {
-  @apply mx-auto px-4 py-16 lg:max-w-7xl;
+  @apply mx-auto px-4  lg:max-w-7xl;
+  &__header {
+    @apply flex justify-between items-center;
+  }
   &__title {
-    @apply text-2xl font-bold text-white;
+    @apply text-2xl font-bold text-white my-10;
+  }
+  &__add-movie {
+    @apply pointer-events-auto ml-8 rounded-md bg-indigo-600 px-3 py-2 text-[0.8125rem] font-semibold leading-5 text-white hover:bg-indigo-500;
   }
   &-movies {
     @apply grid gap-6 sm:grid-cols-2 lg:grid-cols-4;

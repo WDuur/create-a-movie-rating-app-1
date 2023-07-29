@@ -1,33 +1,37 @@
 {
-  "name": "challenge-1",
+  "name": "create-a-movie-rating-app-1ts",
+  "private": true,
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview --port 4173",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
     "test:unit": "vitest --environment jsdom",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@heroicons/vue": "^2.0.16",
+    "@headlessui/vue": "^1.7.15",
+    "@heroicons/vue": "^2.0.18",
     "@tailwindcss/typography": "^0.5.9",
-    "happy-dom": "^8.9.0",
-    "vue": "^3.2.38"
+    "prettier": "^3.0.0",
+    "sass": "^1.64.1",
+    "vitest": "^0.33.0",
+    "vue": "^3.3.4"
   },
   "devDependencies": {
-    "@rushstack/eslint-patch": "^1.1.4",
-    "@vitejs/plugin-vue": "^3.0.3",
-    "@vue/eslint-config-prettier": "^7.0.0",
-    "@vue/test-utils": "^2.3.1",
+    "@typescript-eslint/eslint-plugin": "^6.2.0",
+    "@typescript-eslint/parser": "^6.2.0",
+    "@vitejs/plugin-vue": "^4.2.3",
     "autoprefixer": "^10.4.14",
-    "eslint": "^8.22.0",
-    "eslint-plugin-vue": "^9.3.0",
-    "jsdom": "^20.0.0",
-    "postcss": "^8.4.21",
-    "prettier": "^2.7.1",
-    "sass": "^1.63.6",
-    "tailwindcss": "^3.2.7",
-    "vite": "^3.0.9",
-    "vitest": "^0.23.4"
+    "eslint": "^8.46.0",
+    "eslint-plugin-vue": "^9.16.0",
+    "postcss": "^8.4.27",
+    "tailwindcss": "^3.3.3",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5",
+    "vue-tsc": "^1.8.5"
   }
 }
