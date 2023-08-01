@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import {
   TransitionRoot,
   TransitionChild,
@@ -6,12 +6,10 @@ import {
   DialogPanel,
 } from "@headlessui/vue"
 
-const props = defineProps({
-  isModalOpen: {
-    type: Boolean,
-    required: true,
-  },
-})
+defineProps<{
+  isModalOpen: boolean
+}>()
+
 const emits = defineEmits(["close-modal"])
 
 function closeModal() {
@@ -48,7 +46,7 @@ function closeModal() {
             leave-to="opacity-0 scale-95"
           >
             <DialogPanel
-              class="max-w-lg w-2/4 transform overflow-hidden rounded bg-gray-900 p-6 text-white text-left align-middle shadow-xl transition-all"
+              class="max-w-lg transform overflow-hidden rounded bg-gray-900 p-6 text-white text-left align-middle shadow-xl transition-all"
             >
               <slot name="content" />
             </DialogPanel>

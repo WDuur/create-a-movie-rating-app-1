@@ -1,24 +1,57 @@
-<script setup>
-import { ref, reactive } from "vue"
+<script setup lang="ts">
+import { Ref, ref } from "vue"
 import { items } from "./movies.json"
+import { Movie } from "./movies"
+
+import { useQuery } from "@vue/apollo-composable"
+
+import { movieQuery } from "./graphql/movies.query"
+
 import { StarIcon } from "@heroicons/vue/24/solid"
 import Modal from "./Modal.vue"
 
-const movies = ref(items)
-const newMovie = ref({})
+const { onResult: onResult } = useQuery(movieQuery, () => ({
+  fetchPolicy: "no-cache",
+}))
 
-const maxRaiting = 5
-const updateRaiting = (movieIndex, rating) => {
-  movies.value[movieIndex].rating = rating
+const getRandomInt = (min: number, max: number): number => {
+  const range = max - min + 1
+  return Math.floor(Math.random() * range) + min
 }
-const isModalOpen = ref(false)
-const toggleModal = () => {
-  isModalOpen.value = !isModalOpen.value
+const maxRaiting: number = 5
+const isModalOpen: Ref<boolean> = ref(false)
+const movieList: Movie[] = items
+const movies = ref<Movie[]>(movieList)
+
+const moviesGQL = ref<Movie[]>([])
+const newMovie = ref<Movie>({
+  id: getRandomInt(1, 9999),
+  name: "",
+  description: "",
+  image: "",
+  rating: null,
+  genres: [],
+  inTheaters: false,
+})
+
+onResult((result) => {
+  moviesGQL.value = result.data?.allMovies ?? []
+})
+const updateRating = (movieIndex: number, rating: number): void => {
+  const updatedMovies = moviesGQL.value.slice()
+  const updatedMovie = { ...updatedMovies[movieIndex] }
+  updatedMovie.rating = rating
+  updatedMovies.splice(movieIndex, 1, updatedMovie)
+  moviesGQL.value = updatedMovies
 }
 
-const submitForm = () => {
-  console.log(newMovie.value)
-  debugger
+const toggleModal = (): boolean => {
+  return (isModalOpen.value = !isModalOpen.value)
+}
+
+const submitForm = (): void => {
+  movies.value.push(newMovie.value)
+  toggleModal()
 }
 </script>
 
@@ -26,6 +59,7 @@ const submitForm = () => {
   <div class="m-overview">
     <Modal :is-modal-open="isModalOpen" @close-modal="toggleModal">
       <template #content>
+        {{ newMovie }}
         <form @submit.prevent="submitForm">
           <span class="modal-content__block">
             <label class="modal-content__label" for="name">Name:</label>
@@ -62,8 +96,9 @@ const submitForm = () => {
               id="grene"
               class="modal-content__input"
               multiple
-              v-model="newMovie.grene"
+              v-model="newMovie.genres"
             >
+              <option value="SyFy">SyFy</option>
               <option value="Crime">Crime</option>
               <option value="Drama">Drama</option>
               <option value="Action">Action</option>
@@ -83,9 +118,7 @@ const submitForm = () => {
             >
           </span>
           <span class="flex justify-end">
-            <button class="modal__add-movie" @click="toggleModal">
-              Add Movie
-            </button>
+            <button class="modal__add-movie">Add Movie</button>
           </span>
         </form>
       </template>
@@ -99,7 +132,7 @@ const submitForm = () => {
     </div>
     <div class="m-overview-movies">
       <div
-        v-for="(movie, index) in movies"
+        v-for="(movie, index) in moviesGQL"
         :key="index"
         class="m-overview-card"
       >
@@ -109,7 +142,9 @@ const submitForm = () => {
             class="m-overview-card__star"
             :class="[
               'm-overview-card__star',
-              { 'm-overview-card__star-rating--selected': movie.rating > 0 },
+              {
+                'm-overview-card__star-rating--selected': movie.rating !== null,
+              },
             ]"
           />
           <span class="m-overview-card__star-rating">{{
@@ -138,13 +173,15 @@ const submitForm = () => {
               v-for="star in maxRaiting"
               :key="star"
               :disabled="movie.rating === star"
-              @click="updateRaiting(index, star)"
+              @click="updateRating(index, star)"
             >
               <StarIcon
                 class="m-overview-card-content__star"
                 :class="
-                  star <= movie.rating
-                    ? 'm-overview-card-content__star--selected'
+                  movie.rating !== null
+                    ? star <= movie.rating
+                      ? 'm-overview-card-content__star--selected'
+                      : 'm-overview-card-content__star--open'
                     : 'm-overview-card-content__star--open'
                 "
               />
@@ -237,3 +274,4 @@ const submitForm = () => {
   }
 }
 </style>
+./graphql/movies.query.cjs
