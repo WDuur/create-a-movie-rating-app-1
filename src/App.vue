@@ -1,29 +1,67 @@
 <script setup lang="ts">
-import { Ref, ref } from "vue"
-import { items } from "./movies.json"
+import { Ref, ref, onMounted } from "vue"
 import { Movie } from "./movies"
-
-import { useQuery } from "@vue/apollo-composable"
-
+import { useQuery, useMutation } from "@vue/apollo-composable"
 import { movieQuery } from "./graphql/movies.query"
-
+import { ratingMutation } from "./graphql/rating.mutation"
 import { StarIcon } from "@heroicons/vue/24/solid"
 import Modal from "./Modal.vue"
 
-const { onResult: onResult } = useQuery(movieQuery, () => ({
-  fetchPolicy: "no-cache",
-}))
+const isModalOpen: Ref<boolean> = ref(false)
+const moviesGQL = ref<Movie[]>([])
+const fetchMovies = ref(false)
 
+onMounted(() => {
+  const { onResult: onResult } = useQuery(movieQuery, () => ({
+    fetchPolicy: "no-cache",
+    enabled: fetchMovies.value,
+  }))
+  onResult((result) => {
+    moviesGQL.value = result.data?.allMovies ?? []
+  })
+})
+
+/**
+ * Updates the rating of a movie.
+ *
+ * @param {number} movieIndex - The index of the movie in the moviesGQL array.
+ * @param {number} rating - The new rating for the movie.
+ * @return {Promise<void>} A Promise that resolves once the rating has been updated.
+ */
+const { mutate: updateMovieRating } = useMutation(ratingMutation)
+const updateRating = async (
+  movieIndex: number,
+  rating: number,
+): Promise<void> => {
+  const movieId = moviesGQL.value[movieIndex].id
+
+  await updateMovieRating({
+    payload: {
+      id: movieId,
+      rating: rating,
+    },
+  })
+
+  const moviesCopy = [...moviesGQL.value]
+  const updatedMovie = {
+    ...moviesCopy[movieIndex],
+    rating,
+  }
+  moviesCopy.splice(movieIndex, 1, updatedMovie)
+  moviesGQL.value = moviesCopy
+}
+
+/**
+ * Generates a random integer between the given minimum and maximum values (inclusive).
+ *
+ * @param {number} min - The minimum value for the random integer.
+ * @param {number} max - The maximum value for the random integer.
+ * @return {number} The randomly generated integer.
+ */
 const getRandomInt = (min: number, max: number): number => {
   const range = max - min + 1
   return Math.floor(Math.random() * range) + min
 }
-const maxRaiting: number = 5
-const isModalOpen: Ref<boolean> = ref(false)
-const movieList: Movie[] = items
-const movies = ref<Movie[]>(movieList)
-
-const moviesGQL = ref<Movie[]>([])
 const newMovie = ref<Movie>({
   id: getRandomInt(1, 9999),
   name: "",
@@ -34,23 +72,23 @@ const newMovie = ref<Movie>({
   inTheaters: false,
 })
 
-onResult((result) => {
-  moviesGQL.value = result.data?.allMovies ?? []
-})
-const updateRating = (movieIndex: number, rating: number): void => {
-  const updatedMovies = moviesGQL.value.slice()
-  const updatedMovie = { ...updatedMovies[movieIndex] }
-  updatedMovie.rating = rating
-  updatedMovies.splice(movieIndex, 1, updatedMovie)
-  moviesGQL.value = updatedMovies
-}
-
+/**
+ * Toggles the modal and returns the new state of isModalOpen.
+ *
+ * @return {boolean} The new state of isModalOpen.
+ */
 const toggleModal = (): boolean => {
   return (isModalOpen.value = !isModalOpen.value)
 }
 
+/**
+ * Submits the form.
+ *
+ * @return {void}
+ */
 const submitForm = (): void => {
-  movies.value.push(newMovie.value)
+  console.log(newMovie.value)
+  moviesGQL.value.push(newMovie.value)
   toggleModal()
 }
 </script>
@@ -170,7 +208,7 @@ const submitForm = (): void => {
             Raiting: {{ movie.rating }}/5
 
             <button
-              v-for="star in maxRaiting"
+              v-for="star in 5"
               :key="star"
               :disabled="movie.rating === star"
               @click="updateRating(index, star)"
@@ -230,7 +268,7 @@ const submitForm = (): void => {
     &__image {
       @apply w-full overflow-hidden aspect-square;
       img {
-        @apply h-full w-full max-h-80;
+        @apply h-full w-full;
       }
     }
     &__star {
