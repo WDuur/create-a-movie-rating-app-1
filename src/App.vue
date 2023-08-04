@@ -4,6 +4,7 @@ import { Movie } from "./movies"
 import { useQuery, useMutation } from "@vue/apollo-composable"
 import { movieQuery } from "./graphql/movies.query"
 import { ratingMutation } from "./graphql/rating.mutation"
+import { addMovieMutation } from "./graphql/addMovie.mutation"
 import { StarIcon } from "@heroicons/vue/24/solid"
 import Modal from "./Modal.vue"
 
@@ -86,9 +87,22 @@ const toggleModal = (): boolean => {
  *
  * @return {void}
  */
-const submitForm = (): void => {
-  console.log(newMovie.value)
-  moviesGQL.value.push(newMovie.value)
+
+const { mutate: addMovie } = useMutation(addMovieMutation)
+const submitForm = async (): Promise<void> => {
+  await addMovie({
+    payload: {
+      id: newMovie.value.id,
+      name: newMovie.value.name,
+      description: newMovie.value.description,
+      image: newMovie.value.image,
+      genres: newMovie.value.genres,
+      rating: null,
+      inTheaters: newMovie.value.inTheaters,
+    },
+  })
+  moviesGQL.value = [...moviesGQL.value, newMovie.value]
+
   toggleModal()
 }
 </script>
@@ -97,7 +111,6 @@ const submitForm = (): void => {
   <div class="m-overview">
     <Modal :is-modal-open="isModalOpen" @close-modal="toggleModal">
       <template #content>
-        {{ newMovie }}
         <form @submit.prevent="submitForm">
           <span class="modal-content__block">
             <label class="modal-content__label" for="name">Name:</label>
