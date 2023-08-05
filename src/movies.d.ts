@@ -6,6 +6,12 @@ interface Movie {
   rating: number | null;
   genres: string[];
   inTheaters: boolean;
+  price: Price;
+}
+
+interface Price {
+  buyPrice: number;
+  rentPrice: number;
 }
 
 

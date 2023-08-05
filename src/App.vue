@@ -18,7 +18,7 @@ onMounted(() => {
     enabled: fetchMovies.value,
   }))
   onResult((result) => {
-    moviesGQL.value = result.data?.allMovies ?? []
+    moviesGQL.value = result.data?.movies ?? []
   })
 })
 
@@ -71,6 +71,10 @@ const newMovie = ref<Movie>({
   rating: null,
   genres: [],
   inTheaters: false,
+  price: {
+    buyPrice: 0,
+    rentPrice: 0,
+  },
 })
 
 /**
@@ -105,6 +109,11 @@ const submitForm = async (): Promise<void> => {
 
   toggleModal()
 }
+
+let euro = new Intl.NumberFormat("nl-NL", {
+  style: "currency",
+  currency: "EUR",
+})
 </script>
 
 <template>
@@ -217,6 +226,12 @@ const submitForm = async (): Promise<void> => {
           <p class="m-overview-card-content__description">
             {{ movie.description }}
           </p>
+          <div class="m-overview-card-content__prices">
+            <ul>
+              <li v-html="`koop: ${euro.format(movie.price.buyPrice)}`" />
+              <li v-html="`huur: ${euro.format(movie.price.rentPrice)}`" />
+            </ul>
+          </div>
           <span class="m-overview-card-content__rating">
             Raiting: {{ movie.rating }}/5
 
@@ -263,7 +278,7 @@ const submitForm = async (): Promise<void> => {
   }
 }
 .m-overview {
-  @apply mx-auto px-4  lg:max-w-7xl;
+  @apply mx-auto px-4  lg:max-w-7xl bg-gray-900;
   &__header {
     @apply flex justify-between items-center;
   }
@@ -277,7 +292,8 @@ const submitForm = async (): Promise<void> => {
     @apply grid gap-6 sm:grid-cols-2 lg:grid-cols-4;
   }
   &-card {
-    @apply relative overflow-hidden rounded-md shadow-md bg-white;
+    @apply relative overflow-hidden rounded-md shadow-md bg-white text-gray-900;
+
     &__image {
       @apply w-full overflow-hidden aspect-square;
       img {
@@ -304,6 +320,9 @@ const submitForm = async (): Promise<void> => {
       }
       &__description {
         @apply mt-1 text-gray-500 h-28;
+      }
+      &__prices {
+        @apply py-1;
       }
       &__rating {
         @apply flex flex-row;

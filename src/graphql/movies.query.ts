@@ -1,8 +1,8 @@
 import gql from "graphql-tag";
 
 export const movieQuery = gql`
-  query allMovies {
-    allMovies {
+  query Movies {
+    movies {
       id
       name
       description
@@ -10,6 +10,10 @@ export const movieQuery = gql`
       genres
       rating
       inTheaters
+      price {
+        buyPrice
+        rentPrice
+      }
     }
   }
 `;
