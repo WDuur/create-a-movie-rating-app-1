@@ -1,113 +1,37 @@
 <script setup lang="ts">
-import { Ref, ref, onMounted } from "vue"
-import { Movie } from "./movies"
-import { useQuery, useMutation } from "@vue/apollo-composable"
-import { movieQuery } from "./graphql/movies.query"
-import { ratingMutation } from "./graphql/rating.mutation"
-import { deleteMovieMutation } from "./graphql/deleteMovie.mutation"
-import { StarIcon } from "@heroicons/vue/24/solid"
+import { onMounted } from "vue"
+import { useMovies } from "./composable/useMovies"
+import { useModal } from "./composable/useModal"
+import { StarIcon, ArrowPathIcon } from "@heroicons/vue/24/solid"
 import { TrashIcon } from "@heroicons/vue/24/outline"
 import NewMovie from "./components/organism/newMovie.vue"
 
-const isModalOpen: Ref<boolean> = ref(false)
-const moviesGQL = ref<Movie[]>([])
-let newMovieData = ref<Movie | null>(null)
+const { movieList, getMovies, deleteMovie, updateRating } = useMovies()
+const { isModalOpen, toggleModal } = useModal()
 
-const fetchMovieList = () => {
-  const { onResult: onResult } = useQuery(movieQuery, () => ({
-    fetchPolicy: "no-cache",
-  }))
-  onResult((result) => {
-    moviesGQL.value = [...(result.data?.movies ?? [])].reverse()
-    console.log(moviesGQL.value)
-  })
-}
 onMounted(() => {
-  fetchMovieList()
-})
-
-/**
- * Updates the rating of a movie.
- *
- * @param {number} movieIndex - The index of the movie in the moviesGQL array.
- * @param {number} rating - The new rating for the movie.
- * @return {Promise<void>} A Promise that resolves once the rating has been updated.
- */
-const { mutate: updateMovieRating } = useMutation(ratingMutation)
-const updateRating = async (
-  movieIndex: number,
-  stars: number,
-): Promise<void> => {
-  const movieId = moviesGQL.value[movieIndex].id
-
-  await updateMovieRating({
-    payload: {
-      id: movieId,
-      stars: stars,
-    },
-  })
-
-  const moviesCopy = [...moviesGQL.value]
-  const updatedMovie = {
-    ...moviesCopy[movieIndex],
-    rating: {
-      stars: stars,
-    },
-  }
-  moviesCopy.splice(movieIndex, 1, updatedMovie)
-  moviesGQL.value = moviesCopy
-}
-
-/**
- * Toggles the modal and returns the new state of isModalOpen.
- *
- * @return {boolean} The new state of isModalOpen.
- */
-const toggleModal = (): boolean => {
-  return (isModalOpen.value = !isModalOpen.value)
-}
-
-const { mutate: deleteMovie, onDone: deleteMovieSuccess } =
-  useMutation(deleteMovieMutation)
-const deleteMovies = async (id: number): Promise<void> => {
-  await deleteMovie({
-    deleteMovieId: id,
-  })
-}
-deleteMovieSuccess((result: any) => {
-  if (result) {
-    const deletedMovieId = result.data.deleteMovie.id
-
-    moviesGQL.value = moviesGQL.value.filter(
-      (movie) => movie.id !== deletedMovieId,
-    )
-  }
+  getMovies()
 })
 
 let euro = new Intl.NumberFormat("nl-NL", {
   style: "currency",
   currency: "EUR",
 })
-
-const handleAddNewMovie = (data: Movie) => {
-  newMovieData.value = data
-  moviesGQL.value = [newMovieData.value, ...moviesGQL.value]
-  toggleModal()
-}
 </script>
 
 <template>
   <div class="m-overview">
-    <NewMovie :is-modal-open="isModalOpen" @toggle-modal="handleAddNewMovie" />
+    <NewMovie :is-modal-open="isModalOpen" />
     <div class="m-overview__header">
       <h2 class="m-overview__title">Movies</h2>
+      <ArrowPathIcon class="m-overview__refresh" @click="getMovies" />
       <button class="m-overview__add-movie" @click="toggleModal">
         Add Movie
       </button>
     </div>
     <div class="m-overview-movies">
       <div
-        v-for="(movie, index) in moviesGQL"
+        v-for="(movie, index) in movieList"
         :key="index"
         class="m-overview-card"
       >
@@ -171,7 +95,7 @@ const handleAddNewMovie = (data: Movie) => {
             ></span>
             <TrashIcon
               class="m-overview-card-content--delete"
-              @click="deleteMovies(movie.id)"
+              @click="deleteMovie(movie.id)"
             />
           </span>
         </div>
@@ -206,6 +130,9 @@ const handleAddNewMovie = (data: Movie) => {
   &__title {
     @apply text-2xl font-bold text-white my-10;
   }
+  &__refresh {
+    @apply text-gray-800 h-10 w-10 cursor-pointer;
+  }
   &__add-movie {
     @apply pointer-events-auto ml-8 rounded-md bg-indigo-600 px-3 py-2 text-[0.8125rem] font-semibold leading-5 text-white hover:bg-indigo-500;
   }
@@ -222,7 +149,7 @@ const handleAddNewMovie = (data: Movie) => {
       }
     }
     &__star {
-      @apply absolute top-1 right-1.5 text-gray-300 h-14 w-14;
+      @apply absolute top-1 right-1.5 text-white h-14 w-14;
       &-rating {
         @apply font-bold absolute top-5 right-7 gap-2;
         &--selected {

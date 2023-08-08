@@ -1,30 +1,19 @@
 <script setup lang="ts">
 import { ref } from "vue"
 import { Movie } from "../../movies"
-import { useMutation } from "@vue/apollo-composable"
-import { addMovieMutation } from "../../graphql/addMovie.mutation"
+import { useMovies } from "../../composable/useMovies"
+import { useModal } from "../../composable/useModal"
 import Modal from "../molecule/Modal.vue"
 
-// const isModalOpen: Ref<boolean> = ref(false)
+const { addNewMovie } = useMovies()
+const { isModalOpen, toggleModal } = useModal()
 
 defineProps<{
   isModalOpen: boolean
 }>()
 
-/**
- * Generates a random integer between the given minimum and maximum values (inclusive).
- *
- * @param {number} min - The minimum value for the random integer.
- * @param {number} max - The maximum value for the random integer.
- * @return {number} The randomly generated integer.
- */
-const getRandomInt = (min: number, max: number): number => {
-  const range = max - min + 1
-  return Math.floor(Math.random() * range) + min
-}
-
 const newMovie = ref<Movie>({
-  id: getRandomInt(1, 999999),
+  id: 0,
   name: "",
   description: "",
   image: "",
@@ -38,39 +27,15 @@ const newMovie = ref<Movie>({
     rentPrice: 0,
   },
 })
-/**
- * Submits the form.
- *
- * @return {void}
- */
 
-const { mutate: addMovie } = useMutation(addMovieMutation)
 const submitForm = async (): Promise<void> => {
-  const newMovieData = {
-    id: newMovie.value.id,
-    name: newMovie.value.name,
-    description: newMovie.value.description,
-    image: newMovie.value.image,
-    genres: newMovie.value.genres,
-
-    inTheaters: newMovie.value.inTheaters,
-  }
-
-  await addMovie({
-    payload: newMovieData,
-  })
-
-  emits("toggle-modal", newMovieData)
-}
-const emits = defineEmits(["toggle-modal"])
-
-const toggleModal = () => {
-  emits("toggle-modal")
+  addNewMovie(newMovie.value)
+  toggleModal()
 }
 </script>
 
 <template>
-  <Modal :is-modal-open="isModalOpen" @close-modal="toggleModal">
+  <Modal :is-modal-open="isModalOpen">
     <template #content>
       <form @submit.prevent="submitForm">
         <span class="modal-content__block">

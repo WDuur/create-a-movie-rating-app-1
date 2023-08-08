@@ -5,21 +5,13 @@ import {
   Dialog,
   DialogPanel,
 } from "@headlessui/vue"
-
-defineProps<{
-  isModalOpen: boolean
-}>()
-
-const emits = defineEmits(["close-modal"])
-
-function closeModal() {
-  emits("close-modal")
-}
+import { useModal } from "../../composable/useModal"
+const { isModalOpen, toggleModal } = useModal()
 </script>
 
 <template>
   <TransitionRoot appear :show="isModalOpen" as="template">
-    <Dialog as="div" class="relative z-10" @close="closeModal">
+    <Dialog as="div" class="relative z-10" @close="toggleModal">
       <TransitionChild
         as="template"
         enter="duration-300 ease-out"
