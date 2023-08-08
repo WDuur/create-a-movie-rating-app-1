@@ -8,7 +8,9 @@ export const movieQuery = gql`
       description
       image
       genres
-      rating
+      rating {
+        stars
+      }
       inTheaters
       price {
         buyPrice

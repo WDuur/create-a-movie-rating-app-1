@@ -3,7 +3,7 @@ interface Movie {
   name: string;
   description: string;
   image: string;
-  rating: number | null;
+  rating: Rating;
   genres: string[];
   inTheaters: boolean;
   price: Price;
@@ -12,6 +12,10 @@ interface Movie {
 interface Price {
   buyPrice: number;
   rentPrice: number;
+}
+
+interface Rating {
+  stars: number ;
 }
 
 

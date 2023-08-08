@@ -5,7 +5,6 @@ export const addMovieMutation = gql`
     addMovie(payload: $payload) {
       id
       name
-      rating
       inTheaters
       image
       genres

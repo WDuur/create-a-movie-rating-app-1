@@ -4,22 +4,26 @@ import { Movie } from "./movies"
 import { useQuery, useMutation } from "@vue/apollo-composable"
 import { movieQuery } from "./graphql/movies.query"
 import { ratingMutation } from "./graphql/rating.mutation"
-import { addMovieMutation } from "./graphql/addMovie.mutation"
+import { deleteMovieMutation } from "./graphql/deleteMovie.mutation"
 import { StarIcon } from "@heroicons/vue/24/solid"
-import Modal from "./Modal.vue"
+import { TrashIcon } from "@heroicons/vue/24/outline"
+import NewMovie from "./components/organism/newMovie.vue"
 
 const isModalOpen: Ref<boolean> = ref(false)
 const moviesGQL = ref<Movie[]>([])
-const fetchMovies = ref(false)
+let newMovieData = ref<Movie | null>(null)
 
-onMounted(() => {
+const fetchMovieList = () => {
   const { onResult: onResult } = useQuery(movieQuery, () => ({
     fetchPolicy: "no-cache",
-    enabled: fetchMovies.value,
   }))
   onResult((result) => {
-    moviesGQL.value = result.data?.movies ?? []
+    moviesGQL.value = [...(result.data?.movies ?? [])].reverse()
+    console.log(moviesGQL.value)
   })
+}
+onMounted(() => {
+  fetchMovieList()
 })
 
 /**
@@ -32,50 +36,27 @@ onMounted(() => {
 const { mutate: updateMovieRating } = useMutation(ratingMutation)
 const updateRating = async (
   movieIndex: number,
-  rating: number,
+  stars: number,
 ): Promise<void> => {
   const movieId = moviesGQL.value[movieIndex].id
 
   await updateMovieRating({
     payload: {
       id: movieId,
-      rating: rating,
+      stars: stars,
     },
   })
 
   const moviesCopy = [...moviesGQL.value]
   const updatedMovie = {
     ...moviesCopy[movieIndex],
-    rating,
+    rating: {
+      stars: stars,
+    },
   }
   moviesCopy.splice(movieIndex, 1, updatedMovie)
   moviesGQL.value = moviesCopy
 }
-
-/**
- * Generates a random integer between the given minimum and maximum values (inclusive).
- *
- * @param {number} min - The minimum value for the random integer.
- * @param {number} max - The maximum value for the random integer.
- * @return {number} The randomly generated integer.
- */
-const getRandomInt = (min: number, max: number): number => {
-  const range = max - min + 1
-  return Math.floor(Math.random() * range) + min
-}
-const newMovie = ref<Movie>({
-  id: getRandomInt(1, 9999),
-  name: "",
-  description: "",
-  image: "",
-  rating: null,
-  genres: [],
-  inTheaters: false,
-  price: {
-    buyPrice: 0,
-    rentPrice: 0,
-  },
-})
 
 /**
  * Toggles the modal and returns the new state of isModalOpen.
@@ -86,104 +67,38 @@ const toggleModal = (): boolean => {
   return (isModalOpen.value = !isModalOpen.value)
 }
 
-/**
- * Submits the form.
- *
- * @return {void}
- */
-
-const { mutate: addMovie } = useMutation(addMovieMutation)
-const submitForm = async (): Promise<void> => {
-  await addMovie({
-    payload: {
-      id: newMovie.value.id,
-      name: newMovie.value.name,
-      description: newMovie.value.description,
-      image: newMovie.value.image,
-      genres: newMovie.value.genres,
-      rating: null,
-      inTheaters: newMovie.value.inTheaters,
-    },
+const { mutate: deleteMovie, onDone: deleteMovieSuccess } =
+  useMutation(deleteMovieMutation)
+const deleteMovies = async (id: number): Promise<void> => {
+  await deleteMovie({
+    deleteMovieId: id,
   })
-  moviesGQL.value = [...moviesGQL.value, newMovie.value]
-
-  toggleModal()
 }
+deleteMovieSuccess((result: any) => {
+  if (result) {
+    const deletedMovieId = result.data.deleteMovie.id
+
+    moviesGQL.value = moviesGQL.value.filter(
+      (movie) => movie.id !== deletedMovieId,
+    )
+  }
+})
 
 let euro = new Intl.NumberFormat("nl-NL", {
   style: "currency",
   currency: "EUR",
 })
+
+const handleAddNewMovie = (data: Movie) => {
+  newMovieData.value = data
+  moviesGQL.value = [newMovieData.value, ...moviesGQL.value]
+  toggleModal()
+}
 </script>
 
 <template>
   <div class="m-overview">
-    <Modal :is-modal-open="isModalOpen" @close-modal="toggleModal">
-      <template #content>
-        <form @submit.prevent="submitForm">
-          <span class="modal-content__block">
-            <label class="modal-content__label" for="name">Name:</label>
-            <input
-              class="modal-content__input"
-              type="text"
-              name="name"
-              v-model="newMovie.name"
-          /></span>
-          <span class="block">
-            <label class="modal-content__label" for="description"
-              >Description:</label
-            >
-            <textarea
-              class="modal-content__input"
-              name="description"
-              rows="4"
-              cols="50"
-              v-model="newMovie.description"
-            ></textarea>
-          </span>
-          <span class="block">
-            <label class="modal-content__label" for="image">Image:</label>
-            <input
-              class="modal-content__input"
-              type="text"
-              name="image"
-              v-model="newMovie.image"
-          /></span>
-          <span class="block">
-            <label class="modal-content__label" for="grene">Grene:</label>
-            <select
-              name="grene"
-              id="grene"
-              class="modal-content__input"
-              multiple
-              v-model="newMovie.genres"
-            >
-              <option value="SyFy">SyFy</option>
-              <option value="Crime">Crime</option>
-              <option value="Drama">Drama</option>
-              <option value="Action">Action</option>
-              <option value="Adventure">Adventure</option>
-              <option value="Comedy">Comedy</option>
-            </select>
-          </span>
-          <span class="flex gap-2 py-2">
-            <input
-              type="checkbox"
-              id="theater"
-              name="vehitheaters"
-              v-model="newMovie.inTheaters"
-            />
-            <label class="modal-content__label" for="theaters"
-              >in theaters</label
-            >
-          </span>
-          <span class="flex justify-end">
-            <button class="modal__add-movie">Add Movie</button>
-          </span>
-        </form>
-      </template>
-    </Modal>
-
+    <NewMovie :is-modal-open="isModalOpen" @toggle-modal="handleAddNewMovie" />
     <div class="m-overview__header">
       <h2 class="m-overview__title">Movies</h2>
       <button class="m-overview__add-movie" @click="toggleModal">
@@ -197,18 +112,19 @@ let euro = new Intl.NumberFormat("nl-NL", {
         class="m-overview-card"
       >
         <div class="m-overview-card__image">
-          <img :src="movie.image" />
+          <img :src="movie?.image" />
           <StarIcon
             class="m-overview-card__star"
             :class="[
               'm-overview-card__star',
               {
-                'm-overview-card__star-rating--selected': movie.rating !== null,
+                'm-overview-card__star-rating--selected':
+                  movie.rating?.stars !== null,
               },
             ]"
           />
           <span class="m-overview-card__star-rating">{{
-            movie.rating ? movie.rating : "-"
+            movie.rating?.stars ? movie.rating.stars : "-"
           }}</span>
         </div>
         <div class="m-overview-card-content">
@@ -224,34 +140,39 @@ let euro = new Intl.NumberFormat("nl-NL", {
             >
           </div>
           <p class="m-overview-card-content__description">
-            {{ movie.description }}
+            {{ movie.id }}{{ movie.description }}
           </p>
           <div class="m-overview-card-content__prices">
             <ul>
-              <li v-html="`koop: ${euro.format(movie.price.buyPrice)}`" />
-              <li v-html="`huur: ${euro.format(movie.price.rentPrice)}`" />
+              <li v-html="`koop: ${euro.format(movie.price?.buyPrice)}`" />
+              <li v-html="`huur: ${euro.format(movie.price?.rentPrice)}`" />
             </ul>
           </div>
           <span class="m-overview-card-content__rating">
-            Raiting: {{ movie.rating }}/5
+            Raiting: {{ movie.rating?.stars }}/5
 
-            <button
-              v-for="star in 5"
-              :key="star"
-              :disabled="movie.rating === star"
-              @click="updateRating(index, star)"
-            >
-              <StarIcon
-                class="m-overview-card-content__star"
-                :class="
-                  movie.rating !== null
-                    ? star <= movie.rating
-                      ? 'm-overview-card-content__star--selected'
+            <span
+              ><button
+                v-for="star in 5"
+                :key="star"
+                :disabled="movie.rating?.stars === star"
+                @click="updateRating(index, star)"
+              >
+                <StarIcon
+                  class="m-overview-card-content__star"
+                  :class="
+                    movie.rating !== null
+                      ? star <= movie.rating?.stars
+                        ? 'm-overview-card-content__star--selected'
+                        : 'm-overview-card-content__star--open'
                       : 'm-overview-card-content__star--open'
-                    : 'm-overview-card-content__star--open'
-                "
-              />
-            </button>
+                  "
+                /></button
+            ></span>
+            <TrashIcon
+              class="m-overview-card-content--delete"
+              @click="deleteMovies(movie.id)"
+            />
           </span>
         </div>
       </div>
@@ -303,7 +224,7 @@ let euro = new Intl.NumberFormat("nl-NL", {
     &__star {
       @apply absolute top-1 right-1.5 text-gray-300 h-14 w-14;
       &-rating {
-        @apply text-gray-700 font-bold absolute top-5 right-7;
+        @apply font-bold absolute top-5 right-7 gap-2;
         &--selected {
           @apply text-yellow-500;
         }
@@ -325,7 +246,7 @@ let euro = new Intl.NumberFormat("nl-NL", {
         @apply py-1;
       }
       &__rating {
-        @apply flex flex-row;
+        @apply flex flex-row justify-between;
       }
       &__star {
         @apply text-gray-100 h-5 w-5;
@@ -337,6 +258,9 @@ let euro = new Intl.NumberFormat("nl-NL", {
           @apply text-gray-300;
         }
       }
+      &--delete {
+        @apply h-5 w-5 cursor-pointer hover:text-red-600;
+      }
     }
   }
   &-pillow {
@@ -344,4 +268,3 @@ let euro = new Intl.NumberFormat("nl-NL", {
   }
 }
 </style>
-./graphql/movies.query.cjs
