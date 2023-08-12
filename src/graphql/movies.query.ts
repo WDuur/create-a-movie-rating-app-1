@@ -8,14 +8,27 @@ export const movieQuery = gql`
       description
       image
       genres
-      rating {
-        stars
-      }
       inTheaters
-      price {
-        buyPrice
-        rentPrice
-      }
     }
   }
 `;
+
+// export const movieQuery = gql`
+//   query Movies {
+//     movies {
+//       id
+//       name
+//       description
+//       image
+//       genres
+//       rating {
+//         stars
+//       }
+//       inTheaters
+//       price {
+//         buyPrice
+//         rentPrice
+//       }
+//     }
+//   }
+// `;

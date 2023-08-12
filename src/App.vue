@@ -38,6 +38,7 @@ let euro = new Intl.NumberFormat("nl-NL", {
         <div class="m-overview-card__image">
           <img :src="movie?.image" />
           <StarIcon
+            v-if="movie.rating"
             class="m-overview-card__star"
             :class="[
               'm-overview-card__star',
@@ -47,7 +48,7 @@ let euro = new Intl.NumberFormat("nl-NL", {
               },
             ]"
           />
-          <span class="m-overview-card__star-rating">{{
+          <span v-if="movie.rating" class="m-overview-card__star-rating">{{
             movie.rating?.stars ? movie.rating.stars : "-"
           }}</span>
         </div>
@@ -66,13 +67,13 @@ let euro = new Intl.NumberFormat("nl-NL", {
           <p class="m-overview-card-content__description">
             {{ movie.id }}{{ movie.description }}
           </p>
-          <div class="m-overview-card-content__prices">
+          <div v-if="movie.price" class="m-overview-card-content__prices">
             <ul>
               <li v-html="`koop: ${euro.format(movie.price?.buyPrice)}`" />
               <li v-html="`huur: ${euro.format(movie.price?.rentPrice)}`" />
             </ul>
           </div>
-          <span class="m-overview-card-content__rating">
+          <span v-if="movie.rating" class="m-overview-card-content__rating">
             Raiting: {{ movie.rating?.stars }}/5
 
             <span
